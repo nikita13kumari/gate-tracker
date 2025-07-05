@@ -1,0 +1,73 @@
+/* src/components/StudyPlan.css */
+.study-plan {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.add-plan-form {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.add-plan-form input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.add-plan-form button {
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.add-plan-form button:hover {
+  background: #2980b9;
+}
+
+.plan-items {
+  margin-top: 20px;
+}
+
+.plan-item {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.plan-item.completed .subject,
+.plan-item.completed .topic {
+  text-decoration: line-through;
+  color: #95a5a6;
+}
+
+.item-details {
+  flex: 1;
+  margin-left: 15px;
+}
+
+.subject {
+  font-weight: bold;
+  display: block;
+}
+
+.topic {
+  color: #7f8c8d;
+  display: block;
+}
+
+.time {
+  background: #ecf0f1;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+}

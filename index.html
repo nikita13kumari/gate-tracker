@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GATE Exam Tracker - Persistent Progress</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --algorithms: #4361ee;
+            --data-structures: #7209b7;
+            --os: #f72585;
+            --networks: #4cc9f0;
+            --dbms: #4895ef;
+            --toc: #3a0ca3;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --card-bg: #ffffff;
+            --body-bg: linear-gradient(135deg, #f0f2f5 0%, #e6e9f0 100%);
+            --text: #212529;
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --header-bg: #ffffff;
+            --progress-bg: #e9ecef;
+            --topic-bg: #f8f9fa;
+            --topic-completed: #d1e7dd;
+            --transition: all 0.3s ease;
+        }
+        
+        .dark-theme {
+            --primary: #5e7afc;
+            --secondary: #6d5dfc;
+            --success: #6bdbf8;
+            --light: #121212;
+            --dark: #e0e0e0;
+            --algorithms: #5e7afc;
+            --data-structures: #9d4edd;
+            --os: #ff4d9e;
+            --networks: #6bdbf8;
+            --dbms: #6aa2ff;
+            --toc: #6d5dfc;
+            --gray: #9e9e9e;
+            --light-gray: #2d2d2d;
+            --card-bg: #1e1e1e;
+            --body-bg: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            --text: #e0e0e0;
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            --header-bg: #1e1e1e;
+            --progress-bg: #2d2d2d;
+            --topic-bg: #2d2d2d;
+            --topic-completed: #1d3c34;
+        }
+        
+        body {
+            background: var(--body-bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+            transition: var(--transition);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .header-content {
+            background: var(--header-bg);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: var(--card-shadow);
+            max-width: 900px;
+            margin: 0 auto;
+            transition: var(--transition);
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .theme-toggle {
+            background: var(--card-bg);
+            border: 1px solid var(--light-gray);
+            color: var(--text);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: var(--transition);
+            box-shadow: var(--card-shadow);
+        }
+        
+        .theme-toggle:hover {
+            transform: rotate(20deg);
+            color: var(--primary);
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            background: linear-gradient(45deg, var(--secondary), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: var(--gray);
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            transition: var(--transition);
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            min-width: 180px;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: var(--gray);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+        
+        .progress-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 1100px) {
+            .progress-section {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .chart-container, .subject-progress {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+        }
+        
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 25px;
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+        
+        .comparison-chart {
+            height: 350px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            gap: 20px;
+            padding: 20px 0;
+        }
+        
+        .chart-bar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 70px;
+        }
+        
+        .bar {
+            width: 50px;
+            border-radius: 8px 8px 0 0;
+            transition: height 1s ease;
+            position: relative;
+        }
+        
+        .bar-value {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+        
+        .bar-label {
+            margin-top: 15px;
+            font-weight: 600;
+            text-align: center;
+            color: var(--gray);
+            transition: var(--transition);
+        }
+        
+        .subject-progress-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .subject-bar {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .subject-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+        
+        .subject-name {
+            font-weight: 600;
+            min-width: 200px;
+            color: var(--text);
+            transition: var(--transition);
+        }
+        
+        .progress-container {
+            flex: 1;
+            height: 20px;
+            background: var(--progress-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 1s ease;
+        }
+        
+        .subject-stats {
+            min-width: 100px;
+            text-align: right;
+            font-weight: 700;
+            color: var(--text);
+            transition: var(--transition);
+        }
+        
+        .subjects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .subject-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+        }
+        
+        .subject-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-header {
+            padding: 25px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .card-content {
+            padding: 25px;
+        }
+        
+        .topic-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 15px;
+        }
+        
+        .topic-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-radius: 10px;
+            background: var(--topic-bg);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .topic-item:hover {
+            background: var(--light-gray);
+        }
+        
+        .topic-item.completed {
+            background: var(--topic-completed);
+        }
+        
+        .topic-item i {
+            margin-right: 10px;
+            transition: var(--transition);
+        }
+        
+        .topic-item.completed i {
+            color: #0f5132;
+        }
+        
+        .topic-name {
+            flex: 1;
+            color: var(--text);
+            transition: var(--transition);
+        }
+        
+        .topic-hours {
+            background: rgba(0, 0, 0, 0.08);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: var(--text);
+            transition: var(--transition);
+        }
+        
+        .completed .topic-hours {
+            background: rgba(15, 81, 50, 0.15);
+        }
+        
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--light-gray);
+            font-weight: 500;
+        }
+        
+        .progress-percent {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text);
+            transition: var(--transition);
+        }
+        
+        .progress-label {
+            color: var(--gray);
+            transition: var(--transition);
+        }
+        
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+        
+        .btn:hover {
+            background: var(--secondary);
+            transform: translateY(-3px);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .add-topic-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+            padding: 20px;
+            background: var(--topic-bg);
+            border-radius: 12px;
+            display: none;
+        }
+        
+        .add-topic-form input {
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: 1px solid var(--light-gray);
+            background: var(--card-bg);
+            color: var(--text);
+            font-size: 1rem;
+        }
+        
+        .add-topic-form input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 30px;
+            color: var(--gray);
+            transition: var(--transition);
+        }
+        
+        /* Analytics Section */
+        .analytics-section {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+            transition: var(--transition);
+        }
+        
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        
+        .analytics-card {
+            background: var(--topic-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+        }
+        
+        .analytics-card h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .priority-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .priority-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-radius: 8px;
+            background: var(--card-bg);
+        }
+        
+        .streak-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .streak-days {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        /* Confetti animation */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            animation: confetti-fall 5s linear forwards;
+        }
+        
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+        
+        /* Subject colors */
+        .algorithms { background: var(--algorithms); }
+        .data-structures { background: var(--data-structures); }
+        .os { background: var(--os); }
+        .networks { background: var(--networks); }
+        .dbms { background: var(--dbms); }
+        .toc { background: var(--toc); }
+        
+        .bar-algorithms { background: var(--algorithms); }
+        .bar-data-structures { background: var(--data-structures); }
+        .bar-os { background: var(--os); }
+        .bar-networks { background: var(--networks); }
+        .bar-dbms { background: var(--dbms); }
+        .bar-toc { background: var(--toc); }
+        
+        .progress-algorithms { background: linear-gradient(90deg, var(--algorithms), #5e7afc); }
+        .progress-data-structures { background: linear-gradient(90deg, var(--data-structures), #9d4edd); }
+        .progress-os { background: linear-gradient(90deg, var(--os), #ff4d9e); }
+        .progress-networks { background: linear-gradient(90deg, var(--networks), #6bdbf8); }
+        .progress-dbms { background: linear-gradient(90deg, var(--dbms), #6aa2ff); }
+        .progress-toc { background: linear-gradient(90deg, var(--toc), #6d5dfc); }
+        
+        /* Animation for progress bars */
+        @keyframes progressFill {
+            from { width: 0%; }
+            to { width: var(--progress); }
+        }
+        
+        /* Data status indicator */
+        .data-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            border-radius: 30px;
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+        
+        .data-status.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Recent Achievement */
+        .recent-achievement {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .achievement-badge {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+            background: linear-gradient(135deg, #ffd700, #ffb700);
+        }
+        
+        .achievement-text {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="data-status" id="data-status">Data Saved Successfully!</div>
+        
+        <header>
+            <div class="header-content">
+                <div class="header-top">
+                    <h1><i class="fas fa-graduation-cap"></i> GATE Exam Tracker</h1>
+                    <button class="theme-toggle" id="theme-toggle">
+                        <i class="fas fa-sun"></i>
+                    </button>
+                </div>
+                <p class="subtitle">Track and compare your subject progress to maximize your preparation efficiency</p>
+                
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="overall-progress">68%</div>
+                        <div class="stat-label">Overall Progress</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="study-hours">1200</div>
+                        <div class="stat-label">Study Hours</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="days-streak">120</div>
+                        <div class="stat-label">Days Streak</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">6</div>
+                        <div class="stat-label">Subjects</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <div class="analytics-section">
+            <div class="section-title">
+                <i class="fas fa-chart-line"></i>
+                <h2>Study Analytics</h2>
+            </div>
+            <div class="analytics-grid">
+                <div class="analytics-card">
+                    <h3><i class="fas fa-fire"></i> Current Streak</h3>
+                    <div class="streak-container">
+                        <div class="streak-days" id="streak-days">120</div>
+                        <div>Days of consistent studying! Keep going!</div>
+                    </div>
+                </div>
+                <div class="analytics-card">
+                    <h3><i class="fas fa-exclamation-circle"></i> Priority Areas</h3>
+                    <div class="priority-list" id="priority-list">
+                        <!-- Priority areas will be populated by JavaScript -->
+                    </div>
+                </div>
+                <div class="analytics-card">
+                    <h3><i class="fas fa-trophy"></i> Recent Achievement</h3>
+                    <div class="recent-achievement">
+                        <div class="achievement-badge">
+                            <i class="fas fa-medal"></i>
+                        </div>
+                        <div class="achievement-text">
+                            <div id="recent-achievement-text">Completed 50% of Algorithms!</div>
+                            <div class="achievement-date">Achieved on: <span id="achievement-date">2025-07-15</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="progress-section">
+            <div class="chart-container">
+                <div class="section-title">
+                    <i class="fas fa-chart-bar"></i>
+                    <h2>Subject Progress Comparison</h2>
+                </div>
+                <div class="comparison-chart">
+                    <div class="chart-bar">
+                        <div class="bar bar-algorithms" id="bar-algorithms" style="height: 210px">
+                            <div class="bar-value">82%</div>
+                        </div>
+                        <div class="bar-label">Algorithms</div>
+                    </div>
+                    <div class="chart-bar">
+                        <div class="bar bar-data-structures" id="bar-data-structures" style="height: 165px">
+                            <div class="bar-value">65%</div>
+                        </div>
+                        <div class="bar-label">Data Structures</div>
+                    </div>
+                    <div class="chart-bar">
+                        <div class="bar bar-os" id="bar-os" style="height: 115px">
+                            <div class="bar-value">45%</div>
+                        </div>
+                        <div class="bar-label">OS</div>
+                    </div>
+                    <div class="chart-bar">
+                        <div class="bar bar-networks" id="bar-networks" style="height: 95px">
+                            <div class="bar-value">38%</div>
+                        </div>
+                        <div class="bar-label">Networks</div>
+                    </div>
+                    <div class="chart-bar">
+                        <div class="bar bar-dbms" id="bar-dbms" style="height: 140px">
+                            <div class="bar-value">55%</div>
+                        </div>
+                        <div class="bar-label">DBMS</div>
+                    </div>
+                    <div class="chart-bar">
+                        <div class="bar bar-toc" id="bar-toc" style="height: 180px">
+                            <div class="bar-value">72%</div>
+                        </div>
+                        <div class="bar-label">TOC</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="subject-progress">
+                <div class="section-title">
+                    <i class="fas fa-tasks"></i>
+                    <h2>Detailed Subject Progress</h2>
+                </div>
+                <div class="subject-progress-bars">
+                    <div class="subject-bar">
+                        <div class="subject-icon algorithms">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <div class="subject-name">Algorithms</div>
+                        <div class="progress-container">
+                            <div class="progress-fill progress-algorithms" id="progress-algorithms" style="width: 82%"></div>
+                        </div>
+                        <div class="subject-stats">82%</div>
+                    </div>
+                    
+                    <div class="subject-bar">
+                        <div class="subject-icon data-structures">
+                            <i class="fas fa-sitemap"></i>
+                        </div>
+                        <div class="subject-name">Data Structures</div>
+                        <div class="progress-container">
+                            <div class="progress-fill progress-data-structures" id="progress-data-structures" style="width: 65%"></div>
+                        </div>
+                        <div class="subject-stats">65%</div>
+                    </div>
+                    
+                    <div class="subject-bar">
+                        <div class="subject-icon os">
+                            <i class="fas fa-desktop"></i>
+                        </div>
+                        <div class="subject-name">Operating Systems</div>
+                        <div class="progress-container">
+                            <div class="progress-fill progress-os" id="progress-os" style="width: 45%"></div>
+                        </div>
+                        <div class="subject-stats">45%</div>
+                    </div>
+                    
+                    <div class="subject-bar">
+                        <div class="subject-icon networks">
+                            <i class="fas fa-network-wired"></i>
+                        </div>
+                        <div class="subject-name">Computer Networks</div>
+                        <div class="progress-container">
+                            <div class="progress-fill progress-networks" id="progress-networks" style="width: 38%"></div>
+                        </div>
+                        <div class="subject-stats">38%</div>
+                    </div>
+                    
+                    <div class="subject-bar">
+                        <div class="subject-icon dbms">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <div class="subject-name">DBMS</div>
+                        <div class="progress-container">
+                            <div class="progress-fill progress-dbms" id="progress-dbms" style="width: 55%"></div>
+                        </div>
+                        <div class="subject-stats">55%</div>
+                    </div>
+                    
+                    <div class="subject-bar">
+                        <div class="subject-icon toc">
+                            <i class="fas fa-calculator"></i>
+                        </div>
+                        <div class="subject-name">Theory of Computation</div>
+                        <div class="progress-container">
+                            <div class="progress-fill progress-toc" id="progress-toc" style="width: 72%"></div>
+                        </div>
+                        <div class="subject-stats">72%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section-title">
+            <i class="fas fa-book-open"></i>
+            <h2>Subjects & Topics</h2>
+        </div>
+        
+        <div class="subjects-grid" id="subjects-grid">
+            <!-- Subjects will be populated by JavaScript -->
+        </div>
+        
+        <footer>
+            <p>GATE Exam Tracker &copy; 2026 | All your progress is saved automatically</p>
+            <p><i class="fas fa-database"></i> Data stored locally in your browser</p>
+        </footer>
+    </div>
+
+    <script>
+        // Data structure to hold all study progress
+        let studyData = {
+            subjects: {
+                algorithms: {
+                    name: "Algorithms",
+                    icon: "fa-code",
+                    colorClass: "algorithms",
+                    progress: 82,
+                    hours: 42,
+                    topics: [
+                        { name: "Dynamic Programming", hours: 8, completed: true },
+                        { name: "Greedy Algorithms", hours: 6, completed: true },
+                        { name: "Divide & Conquer", hours: 7, completed: false },
+                        { name: "Sorting Algorithms", hours: 5, completed: true }
+                    ]
+                },
+                dataStructures: {
+                    name: "Data Structures",
+                    icon: "fa-sitemap",
+                    colorClass: "data-structures",
+                    progress: 65,
+                    hours: 36,
+                    topics: [
+                        { name: "Arrays & Linked Lists", hours: 5, completed: true },
+                        { name: "Trees & Binary Trees", hours: 7, completed: true },
+                        { name: "Graphs", hours: 10, completed: false },
+                        { name: "Stacks & Queues", hours: 4, completed: true }
+                    ]
+                },
+                os: {
+                    name: "Operating Systems",
+                    icon: "fa-desktop",
+                    colorClass: "os",
+                    progress: 45,
+                    hours: 28,
+                    topics: [
+                        { name: "Process Management", hours: 6, completed: true },
+                        { name: "File Systems", hours: 5, completed: false },
+                        { name: "Memory Management", hours: 8, completed: true },
+                        { name: "Deadlocks", hours: 4, completed: false }
+                    ]
+                },
+                networks: {
+                    name: "Computer Networks",
+                    icon: "fa-network-wired",
+                    colorClass: "networks",
+                    progress: 38,
+                    hours: 24,
+                    topics: [
+                        { name: "OSI Model", hours: 5, completed: true },
+                        { name: "Routing", hours: 7, completed: false },
+                        { name: "TCP/IP", hours: 6, completed: true },
+                        { name: "Security", hours: 5, completed: false }
+                    ]
+                },
+                dbms: {
+                    name: "DBMS",
+                    icon: "fa-database",
+                    colorClass: "dbms",
+                    progress: 55,
+                    hours: 32,
+                    topics: [
+                        { name: "ER Model", hours: 4, completed: true },
+                        { name: "Normalization", hours: 6, completed: false },
+                        { name: "SQL", hours: 5, completed: true },
+                        { name: "Transactions", hours: 5, completed: false }
+                    ]
+                },
+                toc: {
+                    name: "Theory of Computation",
+                    icon: "fa-calculator",
+                    colorClass: "toc",
+                    progress: 72,
+                    hours: 22,
+                    topics: [
+                        { name: "Regular Languages", hours: 6, completed: true },
+                        { name: "Turing Machines", hours: 8, completed: false },
+                        { name: "Context-Free Languages", hours: 5, completed: true },
+                        { name: "Decidability", hours: 7, completed: false }
+                    ]
+                }
+            },
+            stats: {
+                overallProgress: 68,
+                studyHours: 1200,
+                daysStreak: 120,
+                lastStudyDate: new Date().toISOString().split('T')[0],
+                recentAchievement: {
+                    text: "Completed 50% of Algorithms!",
+                    date: "2025-06-15"
+                }
+            }
+        };
+
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        const body = document.body;
+        const icon = themeToggle.querySelector('i');
+        
+        // Check for saved theme preference
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            body.classList.add('dark-theme');
+            icon.classList.remove('fa-sun');
+            icon.classList.add('fa-moon');
+        }
+        
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-theme');
+            
+            if (body.classList.contains('dark-theme')) {
+                localStorage.setItem('theme', 'dark');
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            } else {
+                localStorage.setItem('theme', 'light');
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            }
+            
+            saveData();
+        });
+        
+        // Load study data from localStorage
+        function loadData() {
+            const savedData = localStorage.getItem('gateStudyData');
+            if (savedData) {
+                try {
+                    const parsedData = JSON.parse(savedData);
+                    studyData = parsedData;
+                    showDataStatus("Data loaded successfully!");
+                } catch (e) {
+                    showDataStatus("Error loading saved data. Using default data.");
+                }
+            } else {
+                showDataStatus("New session started. Data will be saved automatically.");
+            }
+        }
+        
+        // Save study data to localStorage
+        function saveData() {
+            try {
+                localStorage.setItem('gateStudyData', JSON.stringify(studyData));
+                showDataStatus("Data saved successfully!");
+            } catch (e) {
+                showDataStatus("Error saving data!");
+            }
+        }
+        
+        // Show data status message
+        function showDataStatus(message) {
+            const statusEl = document.getElementById('data-status');
+            statusEl.textContent = message;
+            statusEl.classList.add('show');
+            
+            setTimeout(() => {
+                statusEl.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Update overall progress
+        function updateOverallProgress() {
+            let totalProgress = 0;
+            let subjectCount = 0;
+            
+            for (const subject in studyData.subjects) {
+                totalProgress += studyData.subjects[subject].progress;
+                subjectCount++;
+            }
+            
+            studyData.stats.overallProgress = Math.round(totalProgress / subjectCount);
+            document.getElementById('overall-progress').textContent = `${studyData.stats.overallProgress}%`;
+            
+            // Update streak if user studied today
+            const today = new Date().toISOString().split('T')[0];
+            if (studyData.stats.lastStudyDate !== today) {
+                studyData.stats.daysStreak++;
+                studyData.stats.lastStudyDate = today;
+                document.getElementById('days-streak').textContent = studyData.stats.daysStreak;
+                document.getElementById('streak-days').textContent = studyData.stats.daysStreak;
+            }
+            
+            // Update priority areas
+            updatePriorityAreas();
+            
+            // Update recent achievement
+            document.getElementById('recent-achievement-text').textContent = studyData.stats.recentAchievement.text;
+            document.getElementById('achievement-date').textContent = studyData.stats.recentAchievement.date;
+        }
+        
+        // Update priority areas list
+        function updatePriorityAreas() {
+            const priorityList = document.getElementById('priority-list');
+            priorityList.innerHTML = '';
+            
+            // Get subjects sorted by progress (lowest first)
+            const subjects = Object.values(studyData.subjects)
+                .sort((a, b) => a.progress - b.progress)
+                .slice(0, 3);
+            
+            subjects.forEach(subject => {
+                const priorityItem = document.createElement('div');
+                priorityItem.className = 'priority-item';
+                priorityItem.innerHTML = `
+                    <span>${subject.name}</span>
+                    <span>${subject.progress}%</span>
+                `;
+                priorityList.appendChild(priorityItem);
+            });
+        }
+        
+        // Render all subjects
+        function renderSubjects() {
+            const subjectsGrid = document.getElementById('subjects-grid');
+            subjectsGrid.innerHTML = '';
+            
+            for (const subjectKey in studyData.subjects) {
+                const subject = studyData.subjects[subjectKey];
+                const subjectCard = document.createElement('div');
+                subjectCard.className = 'subject-card';
+                
+                subjectCard.innerHTML = `
+                    <div class="card-header ${subject.colorClass}">
+                        <div class="subject-icon ${subject.colorClass}">
+                            <i class="fas ${subject.icon}"></i>
+                        </div>
+                        <h3>${subject.name}</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="progress-info">
+                            <div>
+                                <div class="progress-label">Progress</div>
+                                <div class="progress-percent">${subject.progress}%</div>
+                            </div>
+                            <div>
+                                <div class="progress-label">Study Hours</div>
+                                <div class="stat-value">${subject.hours}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="topic-list">
+                            ${subject.topics.map(topic => `
+                                <div class="topic-item ${topic.completed ? 'completed' : ''}" data-subject="${subjectKey}" data-topic="${topic.name}">
+                                    <i class="fas ${topic.completed ? 'fa-check-circle' : 'fa-circle'}"></i>
+                                    <div class="topic-name">${topic.name}</div>
+                                    <div class="topic-hours">${topic.hours}h</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <button class="btn add-topic-btn" data-subject="${subjectKey}">
+                            <i class="fas fa-plus"></i> Add Topic
+                        </button>
+                        
+                        <div class="add-topic-form" id="${subjectKey}-form">
+                            <input type="text" placeholder="Topic Name" class="topic-name-input">
+                            <input type="number" placeholder="Estimated Hours" min="1" max="50" class="topic-hours-input">
+                            <div class="form-buttons">
+                                <button class="btn save-topic-btn" data-subject="${subjectKey}">
+                                    <i class="fas fa-save"></i> Save
+                                </button>
+                                <button class="btn btn-outline cancel-btn" data-subject="${subjectKey}">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                subjectsGrid.appendChild(subjectCard);
+            }
+            
+            // Add event listeners
+            document.querySelectorAll('.topic-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const subjectKey = this.dataset.subject;
+                    const topicName = this.dataset.topic;
+                    const subject = studyData.subjects[subjectKey];
+                    const topic = subject.topics.find(t => t.name === topicName);
+                    
+                    // Toggle completion status
+                    topic.completed = !topic.completed;
+                    
+                    // Update UI
+                    this.classList.toggle('completed');
+                    const icon = this.querySelector('i');
+                    icon.classList.toggle('fa-circle');
+                    icon.classList.toggle('fa-check-circle');
+                    
+                    // Update subject progress
+                    updateSubjectProgress(subjectKey);
+                    
+                    // Create confetti effect if topic is completed
+                    if (topic.completed) {
+                        createConfetti();
+                    }
+                    
+                    saveData();
+                });
+            });
+            
+            // Add topic functionality
+            document.querySelectorAll('.add-topic-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const subject = this.dataset.subject;
+                    const form = document.getElementById(`${subject}-form`);
+                    form.style.display = 'flex';
+                    this.style.display = 'none';
+                });
+            });
+            
+            // Cancel adding topic
+            document.querySelectorAll('.cancel-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const subject = this.dataset.subject;
+                    const form = document.getElementById(`${subject}-form`);
+                    form.style.display = 'none';
+                    document.querySelector(`.add-topic-btn[data-subject="${subject}"]`).style.display = 'block';
+                    // Clear inputs
+                    form.querySelector('.topic-name-input').value = '';
+                    form.querySelector('.topic-hours-input').value = '';
+                });
+            });
+            
+            // Save new topic
+            document.querySelectorAll('.save-topic-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const subjectKey = this.dataset.subject;
+                    const form = document.getElementById(`${subjectKey}-form`);
+                    const topicName = form.querySelector('.topic-name-input').value;
+                    const topicHours = form.querySelector('.topic-hours-input').value;
+                    
+                    if (!topicName || !topicHours) {
+                        alert('Please fill in both fields');
+                        return;
+                    }
+                    
+                    // Add new topic to subject
+                    studyData.subjects[subjectKey].topics.push({
+                        name: topicName,
+                        hours: parseInt(topicHours),
+                        completed: false
+                    });
+                    
+                    // Re-render subjects to show new topic
+                    renderSubjects();
+                    
+                    // Update subject progress
+                    updateSubjectProgress(subjectKey);
+                    
+                    saveData();
+                });
+            });
+        }
+        
+        // Update subject progress
+        function updateSubjectProgress(subjectKey) {
+            const subject = studyData.subjects[subjectKey];
+            const topics = subject.topics;
+            const completedTopics = topics.filter(topic => topic.completed);
+            subject.progress = Math.round((completedTopics.length / topics.length) * 100);
+            
+            // Update UI
+            document.getElementById(`progress-${subjectKey}`).style.width = `${subject.progress}%`;
+            document.getElementById(`bar-${subjectKey}`).style.height = `${Math.min(220, subject.progress * 2.5)}px`;
+            document.getElementById(`bar-${subjectKey}`).querySelector('.bar-value').textContent = `${subject.progress}%`;
+            
+            // Update the subject card
+            const subjectCards = document.querySelectorAll('.subject-card');
+            subjectCards.forEach(card => {
+                if (card.querySelector('.card-header').classList.contains(subjectKey)) {
+                    card.querySelector('.progress-percent').textContent = `${subject.progress}%`;
+                }
+            });
+            
+            // Check for new achievement
+            if (subject.progress >= 50 && subject.progress < 75) {
+                studyData.stats.recentAchievement = {
+                    text: `Completed 50% of ${subject.name}!`,
+                    date: new Date().toISOString().split('T')[0]
+                };
+            } else if (subject.progress >= 75) {
+                studyData.stats.recentAchievement = {
+                    text: `Mastered ${subject.name} (${subject.progress}%)!`,
+                    date: new Date().toISOString().split('T')[0]
+                };
+            }
+            
+            updateOverallProgress();
+        }
+        
+        // Create confetti effect
+        function createConfetti() {
+            const colors = ['#4361ee', '#7209b7', '#f72585', '#4cc9f0', '#4895ef', '#3a0ca3'];
+            const container = document.querySelector('.container');
+            
+            for (let i = 0; i < 150; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.width = Math.random() * 10 + 5 + 'px';
+                confetti.style.height = Math.random() * 10 + 5 + 'px';
+                confetti.style.animationDuration = Math.random() * 3 + 2 + 's';
+                container.appendChild(confetti);
+                
+                setTimeout(() => {
+                    confetti.remove();
+                }, 5000);
+            }
+        }
+        
+        // Initialize the application
+        function init() {
+            loadData();
+            renderSubjects();
+            updateOverallProgress();
+            
+            // Set initial stats
+            document.getElementById('study-hours').textContent = studyData.stats.studyHours;
+            document.getElementById('days-streak').textContent = studyData.stats.daysStreak;
+            document.getElementById('streak-days').textContent = studyData.stats.daysStreak;
+            
+            // Animate progress bars on load
+            document.querySelectorAll('.progress-fill').forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 300);
+            });
+            
+            // Animate chart bars on load
+            document.querySelectorAll('.bar').forEach(bar => {
+                const height = bar.style.height;
+                bar.style.height = '0px';
+                setTimeout(() => {
+                    bar.style.height = height;
+                }, 500);
+            });
+        }
+        
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
