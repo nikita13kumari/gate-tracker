@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GATE Exam Tracker - Persistent Progress</title>
+    <title>GATE Exam Tracker - Subject Progress</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -36,6 +36,10 @@
             --topic-bg: #f8f9fa;
             --topic-completed: #d1e7dd;
             --transition: all 0.3s ease;
+            --streak-gold: #ffd700;
+            --streak-silver: #c0c0c0;
+            --streak-bronze: #cd7f32;
+            --danger: #e63946;
         }
         
         .dark-theme {
@@ -60,6 +64,7 @@
             --progress-bg: #2d2d2d;
             --topic-bg: #2d2d2d;
             --topic-completed: #1d3c34;
+            --danger: #ff6b6b;
         }
         
         body {
@@ -152,6 +157,7 @@
             min-width: 180px;
             box-shadow: var(--card-shadow);
             transition: var(--transition);
+            position: relative;
         }
         
         .stat-card:hover {
@@ -169,6 +175,29 @@
             color: var(--gray);
             font-size: 1rem;
             transition: var(--transition);
+        }
+        
+        .streak-flame {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: linear-gradient(45deg, #ff9a00, #ff2600);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 8px rgba(255, 106, 0, 0.5);
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
         
         .progress-section {
@@ -432,6 +461,14 @@
             color: white;
         }
         
+        .btn-danger {
+            background: var(--danger);
+        }
+        
+        .btn-danger:hover {
+            background: #d90429;
+        }
+        
         .add-topic-form {
             display: flex;
             flex-direction: column;
@@ -493,6 +530,8 @@
             padding: 20px;
             box-shadow: var(--card-shadow);
             transition: var(--transition);
+            position: relative;
+            overflow: hidden;
         }
         
         .analytics-card h3 {
@@ -501,20 +540,6 @@
             display: flex;
             align-items: center;
             gap: 10px;
-        }
-        
-        .priority-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .priority-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px;
-            border-radius: 8px;
-            background: var(--card-bg);
         }
         
         .streak-container {
@@ -527,6 +552,38 @@
             font-size: 2rem;
             font-weight: 700;
             color: var(--primary);
+        }
+        
+        .countdown-container {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .countdown-label {
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+        
+        .countdown-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .streak-info {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: var(--gray);
+            font-style: italic;
+        }
+        
+        .streak-medal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 2rem;
+            opacity: 0.3;
         }
         
         /* Confetti animation */
@@ -547,6 +604,42 @@
                 transform: translateY(100vh) rotate(720deg);
                 opacity: 0;
             }
+        }
+        
+        /* Fire animation for streak */
+        .fire {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, #ff9a00 0%, #ff2600 100%);
+            border-radius: 50%;
+            animation: fire-grow 0.5s ease-out forwards;
+            z-index: 10;
+        }
+        
+        @keyframes fire-grow {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        /* Streak badge */
+        .streak-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: var(--streak-gold);
+            color: #000;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            z-index: 5;
         }
         
         /* Subject colors */
@@ -599,31 +692,199 @@
             transform: translateY(0);
         }
         
-        /* Recent Achievement */
-        .recent-achievement {
+        /* Streak celebration */
+        .streak-celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        
+        .streak-celebration.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .celebration-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            position: relative;
+            transform: scale(0.8);
+            transition: transform 0.5s ease;
+        }
+        
+        .streak-celebration.active .celebration-content {
+            transform: scale(1);
+        }
+        
+        .celebration-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+        
+        .celebration-content p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+        
+        .celebration-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+        }
+        
+        .streak-number {
+            font-size: 5rem;
+            font-weight: 800;
+            margin: 20px 0;
+            color: var(--streak-gold);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+        
+        /* Daily study tracker */
+        .daily-tracker {
             display: flex;
             align-items: center;
             gap: 15px;
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--topic-bg);
+            border-radius: 12px;
         }
         
-        .achievement-badge {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            color: white;
-            background: linear-gradient(135deg, #ffd700, #ffb700);
+        .tracker-label {
+            font-weight: 600;
         }
         
-        .achievement-text {
-            flex: 1;
+        .tracker-input {
+            padding: 10px 15px;
+            border-radius: 10px;
+            border: 1px solid var(--light-gray);
+            background: var(--card-bg);
+            color: var(--text);
+            font-size: 1rem;
+            width: 100px;
+            text-align: center;
+        }
+        
+        /* Daily progress bar styling */
+        .daily-progress-container {
+            height: 10px;
+            background: var(--progress-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        
+        .daily-progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.5s ease;
+        }
+        
+        .daily-progress-text {
+            font-size: 0.9rem;
+            margin-top: 5px;
+            color: var(--gray);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .stats {
+                gap: 15px;
+            }
+            
+            .stat-card {
+                min-width: 140px;
+                padding: 15px;
+            }
+            
+            .stat-value {
+                font-size: 2rem;
+            }
+            
+            .daily-tracker {
+                flex-wrap: wrap;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .stats {
+                gap: 10px;
+            }
+            
+            .stat-card {
+                min-width: 120px;
+                padding: 12px;
+            }
+            
+            .stat-value {
+                font-size: 1.8rem;
+            }
+        }
+        
+        /* Debug panel */
+        .debug-panel {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            max-width: 300px;
+            font-size: 0.85rem;
+            color: #333;
+            display: none; /* Hidden by default */
+        }
+        
+        .debug-title {
+            font-weight: bold;
+            margin-bottom: 5px;
         }
     </style>
 </head>
 <body>
+    <div class="debug-panel" id="debug-panel">
+        <div class="debug-title">Debug Information</div>
+        <div id="debug-info">Loading...</div>
+    </div>
+    
+    <div class="streak-celebration" id="streak-celebration">
+        <div class="celebration-content">
+            <button class="celebration-close" id="celebration-close">&times;</button>
+            <h2>Streak Milestone!</h2>
+            <div class="streak-number" id="celebration-streak">100</div>
+            <p>You've maintained your study streak for <span id="celebration-days">100</span> days! Keep up the great work!</p>
+            <button class="btn" id="celebration-btn">Continue Studying</button>
+        </div>
+    </div>
+    
     <div class="container">
         <div class="data-status" id="data-status">Data Saved Successfully!</div>
         
@@ -649,11 +910,21 @@
                     <div class="stat-card">
                         <div class="stat-value" id="days-streak">120</div>
                         <div class="stat-label">Days Streak</div>
+                        <div class="streak-flame" id="streak-flame">
+                            <i class="fas fa-fire"></i>
+                        </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-value">6</div>
                         <div class="stat-label">Subjects</div>
                     </div>
+                </div>
+                
+                <div class="daily-tracker">
+                    <span class="tracker-label">Today's Study:</span>
+                    <input type="number" class="tracker-input" id="daily-hours" min="0" max="12" value="0">
+                    <span>hours</span>
+                    <button class="btn" id="log-hours">Log Hours</button>
                 </div>
             </div>
         </header>
@@ -667,27 +938,32 @@
                 <div class="analytics-card">
                     <h3><i class="fas fa-fire"></i> Current Streak</h3>
                     <div class="streak-container">
-                        <div class="streak-days" id="streak-days">120</div>
+                        <div class="streak-days" id="current-streak">150</div>
                         <div>Days of consistent studying! Keep going!</div>
                     </div>
-                </div>
-                <div class="analytics-card">
-                    <h3><i class="fas fa-exclamation-circle"></i> Priority Areas</h3>
-                    <div class="priority-list" id="priority-list">
-                        <!-- Priority areas will be populated by JavaScript -->
+                    <div class="streak-info" id="streak-info">Last studied: Today</div>
+                    <div class="streak-medal">
+                        <i class="fas fa-medal" id="streak-medal"></i>
                     </div>
                 </div>
                 <div class="analytics-card">
-                    <h3><i class="fas fa-trophy"></i> Recent Achievement</h3>
-                    <div class="recent-achievement">
-                        <div class="achievement-badge">
-                            <i class="fas fa-medal"></i>
-                        </div>
-                        <div class="achievement-text">
-                            <div id="recent-achievement-text">Completed 50% of Algorithms!</div>
-                            <div class="achievement-date">Achieved on: <span id="achievement-date">2025-07-15</span></div>
-                        </div>
+                    <h3><i class="fas fa-hourglass-half"></i> Daily Target</h3>
+                    <div class="streak-container">
+                        <div class="streak-days">8h</div>
+                        <div>Daily study goal</div>
                     </div>
+                    <div class="daily-progress-container">
+                        <div class="daily-progress-fill" id="daily-progress-bar" style="width: 65%"></div>
+                    </div>
+                    <div class="daily-progress-text" id="daily-progress-text">5.2 hours completed today</div>
+                </div>
+                <div class="analytics-card">
+                    <h3><i class="fas fa-calendar-alt"></i> Exam Countdown</h3>
+                    <div class="countdown-container">
+                        <div class="countdown-value" id="exam-countdown">87</div>
+                        <div class="countdown-label">Days until GATE exam</div>
+                    </div>
+                    <div class="streak-info" id="exam-date">February 3, 2026</div>
                 </div>
             </div>
         </div>
@@ -829,6 +1105,11 @@
     </div>
 
     <script>
+        // Helper function to convert camelCase to kebab-case
+        function camelToKebab(str) {
+            return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+        }
+        
         // Data structure to hold all study progress
         let studyData = {
             subjects: {
@@ -836,8 +1117,6 @@
                     name: "Algorithms",
                     icon: "fa-code",
                     colorClass: "algorithms",
-                    progress: 82,
-                    hours: 42,
                     topics: [
                         { name: "Dynamic Programming", hours: 8, completed: true },
                         { name: "Greedy Algorithms", hours: 6, completed: true },
@@ -849,8 +1128,6 @@
                     name: "Data Structures",
                     icon: "fa-sitemap",
                     colorClass: "data-structures",
-                    progress: 65,
-                    hours: 36,
                     topics: [
                         { name: "Arrays & Linked Lists", hours: 5, completed: true },
                         { name: "Trees & Binary Trees", hours: 7, completed: true },
@@ -862,8 +1139,6 @@
                     name: "Operating Systems",
                     icon: "fa-desktop",
                     colorClass: "os",
-                    progress: 45,
-                    hours: 28,
                     topics: [
                         { name: "Process Management", hours: 6, completed: true },
                         { name: "File Systems", hours: 5, completed: false },
@@ -875,8 +1150,6 @@
                     name: "Computer Networks",
                     icon: "fa-network-wired",
                     colorClass: "networks",
-                    progress: 38,
-                    hours: 24,
                     topics: [
                         { name: "OSI Model", hours: 5, completed: true },
                         { name: "Routing", hours: 7, completed: false },
@@ -888,8 +1161,6 @@
                     name: "DBMS",
                     icon: "fa-database",
                     colorClass: "dbms",
-                    progress: 55,
-                    hours: 32,
                     topics: [
                         { name: "ER Model", hours: 4, completed: true },
                         { name: "Normalization", hours: 6, completed: false },
@@ -901,8 +1172,6 @@
                     name: "Theory of Computation",
                     icon: "fa-calculator",
                     colorClass: "toc",
-                    progress: 72,
-                    hours: 22,
                     topics: [
                         { name: "Regular Languages", hours: 6, completed: true },
                         { name: "Turing Machines", hours: 8, completed: false },
@@ -916,10 +1185,8 @@
                 studyHours: 1200,
                 daysStreak: 120,
                 lastStudyDate: new Date().toISOString().split('T')[0],
-                recentAchievement: {
-                    text: "Completed 50% of Algorithms!",
-                    date: "2025-06-15"
-                }
+                dailyTarget: 8,
+                dailyProgress: 0
             }
         };
 
@@ -965,6 +1232,18 @@
                 }
             } else {
                 showDataStatus("New session started. Data will be saved automatically.");
+                
+                // Calculate initial study hours from completed topics
+                let initialStudyHours = 0;
+                for (const subjectKey in studyData.subjects) {
+                    const subject = studyData.subjects[subjectKey];
+                    for (const topic of subject.topics) {
+                        if (topic.completed) {
+                            initialStudyHours += topic.hours;
+                        }
+                    }
+                }
+                studyData.stats.studyHours = initialStudyHours;
             }
         }
         
@@ -989,12 +1268,23 @@
             }, 3000);
         }
         
+        // Recalculate all subject progress
+        function recalculateAllProgress() {
+            for (const subjectKey in studyData.subjects) {
+                updateSubjectProgress(subjectKey, true);
+            }
+        }
+        
         // Update overall progress
         function updateOverallProgress() {
             let totalProgress = 0;
             let subjectCount = 0;
             
             for (const subject in studyData.subjects) {
+                // Ensure progress is calculated
+                if (typeof studyData.subjects[subject].progress === 'undefined') {
+                    updateSubjectProgress(subject, true);
+                }
                 totalProgress += studyData.subjects[subject].progress;
                 subjectCount++;
             }
@@ -1007,37 +1297,115 @@
             if (studyData.stats.lastStudyDate !== today) {
                 studyData.stats.daysStreak++;
                 studyData.stats.lastStudyDate = today;
-                document.getElementById('days-streak').textContent = studyData.stats.daysStreak;
-                document.getElementById('streak-days').textContent = studyData.stats.daysStreak;
+                updateStreakDisplay();
+                saveData();
             }
-            
-            // Update priority areas
-            updatePriorityAreas();
-            
-            // Update recent achievement
-            document.getElementById('recent-achievement-text').textContent = studyData.stats.recentAchievement.text;
-            document.getElementById('achievement-date').textContent = studyData.stats.recentAchievement.date;
         }
         
-        // Update priority areas list
-        function updatePriorityAreas() {
-            const priorityList = document.getElementById('priority-list');
-            priorityList.innerHTML = '';
+        // Update streak display with animation
+        function updateStreakDisplay() {
+            const streak = studyData.stats.daysStreak;
+            document.getElementById('days-streak').textContent = streak;
+            document.getElementById('current-streak').textContent = streak;
             
-            // Get subjects sorted by progress (lowest first)
-            const subjects = Object.values(studyData.subjects)
-                .sort((a, b) => a.progress - b.progress)
-                .slice(0, 3);
+            // Update streak info
+            const lastStudied = new Date(studyData.stats.lastStudyDate);
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('streak-info').textContent = `Last studied: ${lastStudied.toLocaleDateString('en-US', options)}`;
             
-            subjects.forEach(subject => {
-                const priorityItem = document.createElement('div');
-                priorityItem.className = 'priority-item';
-                priorityItem.innerHTML = `
-                    <span>${subject.name}</span>
-                    <span>${subject.progress}%</span>
-                `;
-                priorityList.appendChild(priorityItem);
-            });
+            // Add streak medal based on streak length
+            const medalEl = document.getElementById('streak-medal');
+            medalEl.className = 'fas fa-medal streak-medal';
+            
+            if (streak >= 100) {
+                medalEl.style.color = 'var(--streak-gold)';
+            } else if (streak >= 50) {
+                medalEl.style.color = 'var(--streak-silver)';
+            } else if (streak >= 25) {
+                medalEl.style.color = 'var(--streak-bronze)';
+            }
+            
+            // Check for milestone celebrations
+            if (streak % 25 === 0) {
+                celebrateStreak(streak);
+            }
+        }
+        
+        // Calculate days until GATE exam (February 3, 2026)
+        function updateExamCountdown() {
+            const examDate = new Date(2026, 1, 3); // February is month 1 (0-indexed)
+            const today = new Date();
+            const diffTime = examDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            document.getElementById('exam-countdown').textContent = diffDays;
+            document.getElementById('exam-date').textContent = 'February 3, 2026';
+        }
+        
+        // Update daily progress display
+        function updateDailyProgress() {
+            const progressPercent = Math.min(100, (studyData.stats.dailyProgress / studyData.stats.dailyTarget) * 100);
+            document.getElementById('daily-progress-bar').style.width = `${progressPercent}%`;
+            document.getElementById('daily-progress-text').textContent = 
+                `${studyData.stats.dailyProgress.toFixed(1)} hours completed today`;
+        }
+        
+        // Log daily study hours
+        function logDailyHours() {
+            const hours = parseInt(document.getElementById('daily-hours').value);
+            if (isNaN(hours) || hours < 0) {
+                showDataStatus("Please enter a valid number of hours");
+                return;
+            }
+            
+            studyData.stats.studyHours += hours;
+            studyData.stats.dailyProgress += hours;
+            
+            // Update display
+            document.getElementById('study-hours').textContent = studyData.stats.studyHours;
+            updateDailyProgress();
+            
+            // Update streak
+            const today = new Date().toISOString().split('T')[0];
+            if (studyData.stats.lastStudyDate !== today) {
+                studyData.stats.daysStreak++;
+                studyData.stats.lastStudyDate = today;
+                updateStreakDisplay();
+            }
+            
+            showDataStatus(`${hours} study hours logged for today!`);
+            saveData();
+        }
+        
+        // Celebrate streak milestone
+        function celebrateStreak(streak) {
+            const celebration = document.getElementById('streak-celebration');
+            const streakNumber = document.getElementById('celebration-streak');
+            const celebrationDays = document.getElementById('celebration-days');
+            
+            streakNumber.textContent = streak;
+            celebrationDays.textContent = streak;
+            
+            celebration.classList.add('active');
+            
+            // Create celebration fire effect
+            createFireworks(celebration);
+        }
+        
+        // Create fireworks effect for celebration
+        function createFireworks(container) {
+            for (let i = 0; i < 50; i++) {
+                const fire = document.createElement('div');
+                fire.className = 'fire';
+                fire.style.left = Math.random() * 100 + '%';
+                fire.style.top = Math.random() * 100 + '%';
+                fire.style.animationDelay = (Math.random() * 0.5) + 's';
+                container.appendChild(fire);
+                
+                setTimeout(() => {
+                    fire.remove();
+                }, 1000);
+            }
         }
         
         // Render all subjects
@@ -1050,6 +1418,12 @@
                 const subjectCard = document.createElement('div');
                 subjectCard.className = 'subject-card';
                 
+                // Calculate subject hours
+                let subjectHours = 0;
+                for (const topic of subject.topics) {
+                    subjectHours += topic.hours;
+                }
+                
                 subjectCard.innerHTML = `
                     <div class="card-header ${subject.colorClass}">
                         <div class="subject-icon ${subject.colorClass}">
@@ -1061,11 +1435,11 @@
                         <div class="progress-info">
                             <div>
                                 <div class="progress-label">Progress</div>
-                                <div class="progress-percent">${subject.progress}%</div>
+                                <div class="progress-percent">${subject.progress || 0}%</div>
                             </div>
                             <div>
                                 <div class="progress-label">Study Hours</div>
-                                <div class="stat-value">${subject.hours}</div>
+                                <div class="stat-value">${subjectHours}</div>
                             </div>
                         </div>
                         
@@ -1110,6 +1484,7 @@
                     const topic = subject.topics.find(t => t.name === topicName);
                     
                     // Toggle completion status
+                    const wasCompleted = topic.completed;
                     topic.completed = !topic.completed;
                     
                     // Update UI
@@ -1124,6 +1499,35 @@
                     // Create confetti effect if topic is completed
                     if (topic.completed) {
                         createConfetti();
+                    }
+                    
+                    // Update daily progress if marking as completed
+                    if (!wasCompleted && topic.completed) {
+                        // Add topic hours to daily progress
+                        studyData.stats.dailyProgress += topic.hours;
+                        studyData.stats.studyHours += topic.hours;
+                        
+                        // Update UI
+                        document.getElementById('study-hours').textContent = studyData.stats.studyHours;
+                        updateDailyProgress();
+                        
+                        // Update streak if this is the first study activity today
+                        const today = new Date().toISOString().split('T')[0];
+                        if (studyData.stats.lastStudyDate !== today) {
+                            studyData.stats.daysStreak++;
+                            studyData.stats.lastStudyDate = today;
+                            updateStreakDisplay();
+                        }
+                        
+                        showDataStatus(`Marked "${topic.name}" as completed! Added ${topic.hours} hours to daily progress.`);
+                    } else if (wasCompleted && !topic.completed) {
+                        // Remove topic hours if unmarking completion
+                        studyData.stats.dailyProgress -= topic.hours;
+                        studyData.stats.studyHours -= topic.hours;
+                        
+                        // Update UI
+                        document.getElementById('study-hours').textContent = studyData.stats.studyHours;
+                        updateDailyProgress();
                     }
                     
                     saveData();
@@ -1184,37 +1588,52 @@
             });
         }
         
-        // Update subject progress
-        function updateSubjectProgress(subjectKey) {
+        // Update subject progress - FIXED FOR DATA STRUCTURES
+        function updateSubjectProgress(subjectKey, skipUI = false) {
             const subject = studyData.subjects[subjectKey];
             const topics = subject.topics;
-            const completedTopics = topics.filter(topic => topic.completed);
-            subject.progress = Math.round((completedTopics.length / topics.length) * 100);
             
-            // Update UI
-            document.getElementById(`progress-${subjectKey}`).style.width = `${subject.progress}%`;
-            document.getElementById(`bar-${subjectKey}`).style.height = `${Math.min(220, subject.progress * 2.5)}px`;
-            document.getElementById(`bar-${subjectKey}`).querySelector('.bar-value').textContent = `${subject.progress}%`;
+            // Calculate total hours and completed hours
+            let totalHours = 0;
+            let completedHours = 0;
             
-            // Update the subject card
-            const subjectCards = document.querySelectorAll('.subject-card');
-            subjectCards.forEach(card => {
-                if (card.querySelector('.card-header').classList.contains(subjectKey)) {
-                    card.querySelector('.progress-percent').textContent = `${subject.progress}%`;
+            for (const topic of topics) {
+                totalHours += topic.hours;
+                if (topic.completed) {
+                    completedHours += topic.hours;
                 }
-            });
+            }
             
-            // Check for new achievement
-            if (subject.progress >= 50 && subject.progress < 75) {
-                studyData.stats.recentAchievement = {
-                    text: `Completed 50% of ${subject.name}!`,
-                    date: new Date().toISOString().split('T')[0]
-                };
-            } else if (subject.progress >= 75) {
-                studyData.stats.recentAchievement = {
-                    text: `Mastered ${subject.name} (${subject.progress}%)!`,
-                    date: new Date().toISOString().split('T')[0]
-                };
+            // Calculate progress as percentage of completed hours
+            subject.progress = totalHours > 0 ? Math.round((completedHours / totalHours) * 100) : 0;
+            
+            if (!skipUI) {
+                // Convert subjectKey to kebab-case for UI elements
+                const kebabKey = camelToKebab(subjectKey);
+                
+                // Update progress bar in detailed subject progress section
+                const progressBar = document.getElementById(`progress-${kebabKey}`);
+                if (progressBar) {
+                    progressBar.style.width = `${subject.progress}%`;
+                }
+                
+                // Update chart bar
+                const barElement = document.getElementById(`bar-${kebabKey}`);
+                if (barElement) {
+                    barElement.style.height = `${Math.min(220, subject.progress * 2.5)}px`;
+                    const barValue = barElement.querySelector('.bar-value');
+                    if (barValue) {
+                        barValue.textContent = `${subject.progress}%`;
+                    }
+                }
+                
+                // Update subject cards
+                const subjectCards = document.querySelectorAll('.subject-card');
+                subjectCards.forEach(card => {
+                    if (card.querySelector('.card-header').classList.contains(subject.colorClass)) {
+                        card.querySelector('.progress-percent').textContent = `${subject.progress}%`;
+                    }
+                });
             }
             
             updateOverallProgress();
@@ -1244,13 +1663,19 @@
         // Initialize the application
         function init() {
             loadData();
+            
+            // Recalculate all progress to ensure consistency
+            recalculateAllProgress();
+            
             renderSubjects();
             updateOverallProgress();
+            updateExamCountdown();
+            updateStreakDisplay();
+            updateDailyProgress();
             
             // Set initial stats
             document.getElementById('study-hours').textContent = studyData.stats.studyHours;
-            document.getElementById('days-streak').textContent = studyData.stats.daysStreak;
-            document.getElementById('streak-days').textContent = studyData.stats.daysStreak;
+            document.getElementById('daily-hours').value = '';
             
             // Animate progress bars on load
             document.querySelectorAll('.progress-fill').forEach(bar => {
@@ -1269,6 +1694,24 @@
                     bar.style.height = height;
                 }, 500);
             });
+            
+            // Add event listeners for celebration close
+            document.getElementById('celebration-close').addEventListener('click', function() {
+                document.getElementById('streak-celebration').classList.remove('active');
+            });
+            
+            document.getElementById('celebration-btn').addEventListener('click', function() {
+                document.getElementById('streak-celebration').classList.remove('active');
+            });
+            
+            // Add event listener for logging hours
+            document.getElementById('log-hours').addEventListener('click', logDailyHours);
+            
+            // Update countdown every day at midnight
+            setInterval(updateExamCountdown, 86400000); // 24 hours
+            
+            // Update streak display daily
+            setInterval(updateStreakDisplay, 86400000);
         }
         
         // Initialize when DOM is loaded
